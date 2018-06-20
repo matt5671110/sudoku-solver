@@ -1,11 +1,19 @@
-﻿#include <fcntl.h>
-#include <io.h>
+﻿//identify OS
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+	#define SYSTEM_WINDOWS
+#endif
+
+#include <fcntl.h>
 #include <cctype>
 #include <stack>
 #include <chrono>
 #include <limits>
 
 #include "Grid.h"
+
+#ifdef SYSTEM_WINDOWS
+#include <io.h>
+#endif
 
 typedef std::chrono::steady_clock::time_point steady_time;
 
@@ -20,8 +28,10 @@ void nextGuess(std::stack<Grid::GuessState>& stack, Grid& grid);
 //Definitions
 int main(int argc, const char* argv[])
 {
+#ifdef SYSTEM_WINDOWS
 	//set console for wide character support
 	_setmode(_fileno(stdout), _O_U16TEXT);
+#endif
 
 	Grid grid;
 
