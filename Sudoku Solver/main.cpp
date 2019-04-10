@@ -22,6 +22,8 @@ void drawMenu();
 char getMenuChar();
 void enterKnowns(Grid& grid);
 
+void solvePuzzle(Grid& grid);
+
 void createGuess(std::stack<Grid::GuessState>& stack, Grid& grid);
 void nextGuess(std::stack<Grid::GuessState>& stack, Grid& grid);
 
@@ -41,72 +43,12 @@ int main(int argc, const char* argv[])
 	{
 		char selection = getMenuChar();
 
-		if (selection == 'K')
+		if (selection == 'D')
 			grid.drawGridWithKnowns();
-		else if (selection == 'P')
-			grid.drawGridWithPossibilities();
 		else if (selection == 'E')
 			enterKnowns(grid);
 		else if (selection == 'S')
-		{
-			if (!grid.checkAllDuplicates())
-			{
-				steady_time begin = std::chrono::steady_clock::now();
-
-				std::stack<Grid::GuessState> guess_stack;
-
-				int num_guesses = 0;
-				int num_iterations = 0;
-
-				do
-				{
-
-					bool changes_made = false;
-					do
-					{
-						bool elim, singles;
-						elim = grid.doAllEliminations();
-						singles = grid.doAllSingles();
-
-						changes_made = elim || singles;
-
-						num_iterations++;
-					} while (changes_made);
-
-					if (!grid.isSolved())
-					{
-						if (grid.isUnsolvable())
-						{
-							nextGuess(guess_stack, grid);
-						}
-						else
-						{
-							//stack isn't empty, grid still isn't solved, push on another guess
-							createGuess(guess_stack, grid);
-							nextGuess(guess_stack, grid);
-							num_guesses++;
-						}
-					}
-
-				} while (!grid.isSolved());
-
-				steady_time end = std::chrono::steady_clock::now();
-
-				std::wcout << std::endl;
-
-				grid.drawGridWithKnowns();
-
-				std::wcout << std::endl << "Piece of Cake!" << std::endl;
-				std::wcout << "Num Iterations: " << num_iterations << std::endl;
-				std::wcout << "Num Guesses: " << num_guesses << std::endl;
-				std::wcout << "Execution Time (sec): " <<
-					std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() / 1000000.0 << std::endl << std::endl;
-			}
-			else
-			{
-				std::wcout << "Invalid Puzzle!" << std::endl;
-			}
-		}
+			solvePuzzle(grid);
 		else if (selection == 'R')
 		{
 			grid.resetGrid();
@@ -131,14 +73,13 @@ int main(int argc, const char* argv[])
 void drawMenu()
 {
 	std::wcout << "Sudoku Solver:" << std::endl;
-	std::wcout << "\tK - Draw Grid With Known Values" << std::endl;
-	std::wcout << "\tP - Draw Grid With Possible Values" << std::endl;
+	std::wcout << "\tD - Draw Grid With Known Values" << std::endl;
 	std::wcout << "\tE - Enter Known Values Into Grid" << std::endl;
 	std::wcout << "\tS - Solve Puzzle" << std::endl;
 	std::wcout << "\tR - Reset Grid" << std::endl;
-	std::wcout << "\tT - Reset Grid Leaving User-Set Known Values" << std::endl;
-	std::wcout << "\tW - Write User-Set Known Values To File" << std::endl;
-	std::wcout << "\tL - Load User-Set Known Values From File" << std::endl;
+	std::wcout << "\tT - Reset Grid Leaving User-Set Values" << std::endl;
+	std::wcout << "\tW - Write User-Set Values To File" << std::endl;
+	std::wcout << "\tL - Load User-Set Values From File" << std::endl;
 	std::wcout << "\tQ - Quit" << std::endl;
 	std::wcout << std::endl << "Input: ";
 }
@@ -160,7 +101,7 @@ char getMenuChar()
 			continue;
 		}
 
-		if (menu_char == 'K' || menu_char == 'P' || menu_char == 'E' ||
+		if (menu_char == 'D' || menu_char == 'E' ||
 			menu_char == 'S' || menu_char == 'R' || menu_char == 'T' || 
 			menu_char == 'W' || menu_char == 'L' ||menu_char == 'Q')
 		{
@@ -220,6 +161,67 @@ void enterKnowns(Grid& grid)
 	//flush input buffer before returning to menu
 	std::cin.clear();
 	std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+}
+
+void solvePuzzle(Grid& grid)
+{
+	if (!grid.checkAllDuplicates())
+	{
+		steady_time begin = std::chrono::steady_clock::now();
+
+		std::stack<Grid::GuessState> guess_stack;
+
+		int num_guesses = 0;
+		int num_iterations = 0;
+
+		do
+		{
+
+			bool changes_made = false;
+			do
+			{
+				bool elim, singles;
+				elim = grid.doAllEliminations();
+				singles = grid.doAllSingles();
+
+				changes_made = elim || singles;
+
+				num_iterations++;
+			} while (changes_made);
+
+			if (!grid.isSolved())
+			{
+				if (grid.isUnsolvable())
+				{
+					nextGuess(guess_stack, grid);
+				}
+				else
+				{
+					//stack isn't empty, grid still isn't solved, push on another guess
+					createGuess(guess_stack, grid);
+					nextGuess(guess_stack, grid);
+					num_guesses++;
+				}
+			}
+
+		} while (!grid.isSolved());
+
+		steady_time end = std::chrono::steady_clock::now();
+
+		std::wcout << std::endl;
+
+		grid.drawGridWithKnowns();
+
+		std::wcout << std::endl << "Piece of Cake!" << std::endl;
+		std::wcout << "Num Iterations: " << num_iterations << std::endl;
+		std::wcout << "Num Guesses: " << num_guesses << std::endl;
+		std::wcout << "Execution Time (sec): " <<
+			std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() / 1000000.0 << std::endl << std::endl;
+	}
+	else
+	{
+		std::wcout << "Invalid Puzzle!" << std::endl;
+	}
 }
 
 void createGuess(std::stack<Grid::GuessState>& stack, Grid& grid)
